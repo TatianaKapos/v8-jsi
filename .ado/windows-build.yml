@@ -65,13 +65,29 @@ steps:
       ignoreDirectories: 'build\v8build\depot_tools'
 
   - script: mkdir ${{parameters.outputPath}}\_manifest\$(BuildPlatform)\$(BuildConfiguration)
+    displayName: 📒 Prep Manifest
 
   - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
     displayName: 📒 Generate Manifest
     inputs:
       BuildDropPath: ${{parameters.outputPath}}
       ManifestDirPath: ${{parameters.outputPath}}\_manifest\$(BuildPlatform)\$(BuildConfiguration)
-      
+
+  # Guardian does not handle custom builds, so manually running Binskim
+  - task: BinSkim@3
+    displayName: Run Binskim Analysis
+    inputs:
+        InputType: 'Basic'
+        Function: 'analyze'
+        AnalyzeTarget: $(Build.ArtifactStagingDirectory)/**/*.dll
+        AnalyzeVerbose: true
+        toolVersion: 'LatestPreRelease'
+    continueOnError: true
+    condition: eq(variables.BuildConfiguration, 'Release')
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@2
+    displayName: 'Guardian Break'
+
   - task: PublishBuildArtifacts@1
     displayName: "Publish artifacts"
     inputs:
@@ -79,3 +95,5 @@ steps:
       pathtoPublish: ${{parameters.outputPath}}
 
   - task: ComponentGovernanceComponentDetection@0
+    inputs:
+      ignoreDirectories: 'android/build/v8/third_party/catapult'
