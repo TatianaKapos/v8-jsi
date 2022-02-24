@@ -75,9 +75,10 @@ $numberOfThreads = [int]((Get-CimInstance Win32_ComputerSystem).NumberOfLogicalP
 
 $ninjaExtraTargets = ""
 
-if ($AppPlatform -ne "uwp") {
-    $ninjaExtraTargets += "v8windbg"
-}
+# Skip debug extension
+# if ($AppPlatform -ne "uwp") {
+#     $ninjaExtraTargets += "v8windbg"
+# }
 
 & ninja -v -j $numberOfThreads -C $buildoutput v8jsi jsitests $ninjaExtraTargets | Tee-Object -FilePath "$SourcesPath\build.log"
 if (!$?) {
@@ -118,10 +119,10 @@ if (!$PSVersionTable.Platform -or $IsWindows) {
         Copy-Item "$buildoutput\v8jsi.dll.pdb" -Destination "$OutputPath\lib\$AppPlatform\$Configuration\$Platform"
     }
 
-    # Debugging extension
-    if ($AppPlatform -ne "uwp") {
-        Copy-Item "$buildoutput\v8windbg.dll" -Destination "$OutputPath\lib\$AppPlatform\$Configuration\$Platform"
-    }
+    # Skip Debugging extension
+    # if ($AppPlatform -ne "uwp") {
+    #     Copy-Item "$buildoutput\v8windbg.dll" -Destination "$OutputPath\lib\$AppPlatform\$Configuration\$Platform"
+    # }
 }
 else {
     #TODO (#2): .so
